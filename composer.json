@@ -1,0 +1,32 @@
+{
+    "name": "nagyatka/kodiak",
+    "type": "library",
+    "description": "Kodiak is a lightweight php application framework",
+    "keywords": ["framework","php"],
+    "license": "BSD 2-Clause",
+    "homepage": "https://github.com/nagyatka/kodiak",
+    "authors": [
+        {
+            "name": "Attila Nagy",
+            "email": "anagy@hit.bme.hu",
+            "role": "Author, Developer"
+        }
+    ],
+    "autoload": {
+        "psr-0": {
+            "Kodiak": "src/"
+        }
+    },
+    "require": {
+        "php": "^7.0",
+        "pimple/pimple": "^3.0",
+        "nikic/fast-route": "v1.2.0",
+        "psr/log": "1.0.2",
+        "nagyatka/pandabase": "v0.20.*",
+        "symfony/http-foundation": "v3.3.*",
+        "twig/twig": "v2.4.*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "5.4.8"
+    }
+}
