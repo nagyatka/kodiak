@@ -3,7 +3,7 @@
     "type": "library",
     "description": "Kodiak is a lightweight php application framework",
     "keywords": ["framework","php"],
-    "license": "BSD 2-Clause",
+    "license": "BSD-2-Clause",
     "homepage": "https://github.com/nagyatka/kodiak",
     "authors": [
         {
