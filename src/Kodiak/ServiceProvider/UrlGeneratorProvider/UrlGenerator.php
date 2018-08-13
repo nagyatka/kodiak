@@ -2,6 +2,7 @@
 
 namespace Kodiak\ServiceProvider\UrlGeneratorProvider;
 
+use Exception;
 use Kodiak\Application;
 
 class UrlGenerator
