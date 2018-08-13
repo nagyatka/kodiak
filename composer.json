@@ -22,7 +22,7 @@
         "pimple/pimple": "^3.0",
         "nikic/fast-route": "v1.2.0",
         "psr/log": "1.0.2",
-        "nagyatka/pandabase": "dev-master",
+        "nagyatka/pandabase": "v0.20.3",
         "symfony/http-foundation": "v3.3.*",
         "twig/twig": "v2.4.*"
     },
