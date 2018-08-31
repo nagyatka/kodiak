@@ -1,6 +1,6 @@
 <?php
 
-namespace PandabaseAuthentication;
+namespace Kodiak\Security\PandabaseAuthentication;
 
 
 use Kodiak\Security\Model\Authentication\AuthenticationInterface;
