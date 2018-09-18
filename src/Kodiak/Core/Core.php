@@ -60,13 +60,7 @@ class Core
      */
     public function processRequest(KodiConf $kodiConf, Request $request): Module {
 
-        // Run hooks
-        foreach ($this->registeredHooks as $registeredHook) {
-            /** @var HookInterface $registeredHook */
-            $request = $registeredHook->process($kodiConf, $request);
-        }
-
-        // Run router
+        // Init router
         $routerConfiguration = $kodiConf->getRouterConfiguration();
         if(!isset($routerConfiguration["class_name"])) {
             $this->router = new SimpleRouter([]);
@@ -78,6 +72,14 @@ class Core
             $this->router = new $routerClassName($routerConfiguration["parameters"]);
         }
         $this->router->setRoutes($kodiConf->getRoutesConfiguration());
+
+        // Run hooks
+        foreach ($this->registeredHooks as $registeredHook) {
+            /** @var HookInterface $registeredHook */
+            $request = $registeredHook->process($kodiConf, $request);
+        }
+
+        // Run router
         $routerResult = $this->router->findRoute($request->getHttpMethod(),$request->getUri());
         $parts = $controllerParts = explode("::", $routerResult["handler"]);
 
