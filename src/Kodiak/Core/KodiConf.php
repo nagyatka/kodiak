@@ -16,6 +16,7 @@ class KodiConf
     const MODULES           = "modules";
     const ROUTER            = "router";
     const ROUTES            = "routes";
+    const ERROR_HANDLER     = "error_handler";
 
     const ENV_DEVELOPMENT   = "development";
     const ENV_PRODUCTION    = "production";
