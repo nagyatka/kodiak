@@ -48,7 +48,7 @@ class Response
     public function __construct($content = '', $status = 200, $headers = array())
     {
         $this->headers = $headers;
-        $this->setContent($content);
+        $this->setContent($content == null ? '' : $content);
         $this->setStatusCode($status);
     }
 
