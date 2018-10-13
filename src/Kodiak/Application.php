@@ -11,6 +11,7 @@ use Kodiak\Exception\Http\HttpInternalServerErrorException;
 use Kodiak\Exception\Http\HttpNotFoundException;
 use Kodiak\Exception\Http\HttpServiceTemporarilyUnavailableException;
 use Kodiak\Exception\RedirectException;
+use Kodiak\Request\CronRequest;
 use Kodiak\Request\Request;
 use Pimple\Container;
 use Pimple\Exception\UnknownIdentifierException;
@@ -87,11 +88,12 @@ class Application implements \ArrayAccess
 
     /**
      * @param array $conf
+     * @param bool $cmd_line
      */
-    public function run(array $conf): void {
+    public function run(array $conf, $cmd_line = false): void {
         ob_start();
         $kodiConf = new KodiConf($conf);
-        $request = Request::get();
+        $request = $cmd_line ? CronRequest::get() : Request::get();
         try {
 
             // Init application (init services and environment) using KodiConf

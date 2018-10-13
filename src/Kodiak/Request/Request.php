@@ -8,7 +8,7 @@ class Request
     /**
      * @var Request
      */
-    private static $instance = null;
+    protected static $instance = null;
 
     /**
      * @var string
@@ -33,7 +33,7 @@ class Request
     /**
      * Request constructor.
      */
-    private function __construct()
+    protected function __construct()
     {
 
     }
