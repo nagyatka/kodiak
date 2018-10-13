@@ -33,7 +33,7 @@ abstract class Module
         $controllerFullName = $this->getControllerNamespace().$this->controllerName;
         $controller = new $controllerFullName();
         $result = $controller->{$this->method}($this->urlParams);
-        if(is_string($result)) {
+        if(is_string($result) || $result == null) {
             $result = new Response($result);
         }
         return $result;
