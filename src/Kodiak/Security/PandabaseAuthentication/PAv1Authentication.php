@@ -47,6 +47,8 @@ class PAv1Authentication extends AuthenticationInterface
             return new AuthenticationTaskResult(false, null);
         }
 
+        unset($userCandidate["password"]);
+
         return new AuthenticationTaskResult(true, $userCandidate);
     }
 
