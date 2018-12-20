@@ -16,7 +16,7 @@ use Kodiak\Request\Request;
 use Kodiak\Security\Model\SecurityManager;
 use PandaBase\Connection\ConnectionManager;
 
-class PandasAccessManagerHook extends HookInterface
+class PandabaseAccessManagerHook extends HookInterface
 {
 
     /**
@@ -29,7 +29,7 @@ class PandasAccessManagerHook extends HookInterface
         /** @var SecurityManager $securityManager */
         $securityManager = Application::get("security");
 
-        ConnectionManager::getInstance()->registerAuthenticatedUser($securityManager->getUser());
+        ConnectionManager::getInstance()->registerAuthorizedUser($securityManager->getUser());
 
         return $request;
     }
