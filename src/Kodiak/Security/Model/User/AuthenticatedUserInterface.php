@@ -2,11 +2,14 @@
 
 namespace Kodiak\Security\Model\User;
 
+
+use PandaBase\AccessManagement\AuthorizedUserInterface;
+
 /**
  * Interface UserInterface
  * @package KodiSecurity\Model
  */
-interface AuthenticatedUserInterface
+interface AuthenticatedUserInterface extends AuthorizedUserInterface
 {
     /**
      * @return string

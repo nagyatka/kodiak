@@ -64,4 +64,14 @@ class AnonymUser implements AuthenticatedUserInterface
     {
         return new AnonymUser();
     }
+
+    public function isRoot()
+    {
+        return false;
+    }
+
+    public function getAccessGroups()
+    {
+        return $this->getRoles();
+    }
 }
