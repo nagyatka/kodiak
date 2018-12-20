@@ -7,6 +7,7 @@ class Response
 {
     const HTTP_CONTINUE                 = 100;
     const HTTP_OK                       = 200;
+    const HTTP_INVALID_REQUEST          = 400;
     const HTTP_UNAUTHORIZED             = 401;
     const HTTP_FORBIDDEN                = 403;
     const HTTP_NOT_FOUND                = 404;
@@ -16,6 +17,7 @@ class Response
     public static $statusTexts = array(
         100 => 'Continue',
         200 => 'OK',
+        400 => 'Invalid request',
         401 => 'Unauthorized',
         403 => 'Forbidden',
         404 => 'Not Found',
