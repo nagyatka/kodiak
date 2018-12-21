@@ -15,6 +15,19 @@ class StreamResponse extends Response
     public function __construct($file, $content_type = 'video/mp4')
     {
 
+        // PHP-FCGI getallheaders support
+        if (!function_exists('getallheaders')) {
+            function getallheaders() {
+            $headers = [];
+            foreach ($_SERVER as $name => $value) {
+                if (substr($name, 0, 5) == 'HTTP_') {
+                    $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+                }
+            }
+            return $headers;
+            }
+        }          
+
         // Make sure the files exists
         if (!file_exists($file)) {
             parent::__construct(Response::$statusTexts[Response::HTTP_INVALID_REQUEST],Response::HTTP_INVALID_REQUEST);
