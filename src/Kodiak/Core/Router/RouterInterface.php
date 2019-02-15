@@ -15,6 +15,12 @@ interface RouterInterface
     public function setRoutes(array $routes);
 
     /**
+     * @param RouterHook $hook
+     * @return void
+     */
+    public function addHook(RouterHook $hook);
+
+    /**
      * @return array
      */
     public function getRoutes();

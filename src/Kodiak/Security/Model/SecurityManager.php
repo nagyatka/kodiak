@@ -74,10 +74,6 @@ class SecurityManager
             return $newUser;
         }
         else {
-            // Refresh updated_at value
-            $securitySession[self::SESS_UPDATED_AT] = time();
-            $this->setSecuritySessionFromArray($securitySession);
-
             /** @var AuthenticatedUserInterface $userClassName */
             $userClassName = $this->userClassName;
             return $userClassName::getUserFromSecuritySession(
@@ -108,9 +104,6 @@ class SecurityManager
             return -1;
         }
         else {
-            // Refresh updated_at value
-            $securitySession[self::SESS_UPDATED_AT] = time();
-            $this->setSecuritySessionFromArray($securitySession);
             return  $securitySession[self::SESS_USER_ID];
         }
     }
@@ -267,4 +260,27 @@ class SecurityManager
         }
         return $this->authentication;
     }
+
+    /**
+     * It refreshes the update_at session variable to actual time with time() function call.
+     *
+     */
+    public function refreshUpdateAt() {
+        // Get session
+        $securitySession = $this->getSecuritySession();
+        if($securitySession != null) {
+            $securitySession[self::SESS_UPDATED_AT] = time();
+            $this->setSecuritySessionFromArray($securitySession);
+        }
+    }
+
+    /**
+     * @return int
+     */
+    public function getExpirationTime(): int
+    {
+        return $this->expiration_time;
+    }
+
+
 }
