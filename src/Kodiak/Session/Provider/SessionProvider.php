@@ -14,5 +14,17 @@ class SessionProvider implements ServiceProviderInterface
         $pimple["session"] = $pimple->factory(function(){
             return new Session();
         });
+
+        $pimple->extend('twig', function ($twig, $c) {
+            /** @var Twig $mytwig */
+            $mytwig = $twig;
+            /** @var SecurityManager $securityManager */
+            $session = $c["session"];
+            $getSessionVar = new \Twig_SimpleFunction("getSessionVar",function($variable) use ($session) {
+                return $session->get($variable);
+            });
+            $mytwig->getTwigEnvironment()->addFunction($getSessionVar);
+            return $mytwig;
+        });        
     }
 }
