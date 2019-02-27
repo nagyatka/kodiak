@@ -47,6 +47,11 @@ class PAv1Authentication extends AuthenticationInterface
             return new AuthenticationTaskResult(false, null);
         }
 
+        // Cseck password expiry
+        if (!$userCandidate["password_expire"] || $userCandidate["password_expire"]<date('Y-m-d H:i:s')) {
+            return new AuthenticationTaskResult(false, 'PASSWORD_EXPIRED');
+        }
+
         unset($userCandidate["password"]);
 
         return new AuthenticationTaskResult(true, $userCandidate);
