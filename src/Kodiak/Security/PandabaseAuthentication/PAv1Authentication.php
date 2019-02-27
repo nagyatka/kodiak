@@ -47,6 +47,11 @@ class PAv1Authentication extends AuthenticationInterface
             return new AuthenticationTaskResult(false, null);
         }
 
+        // Cseck password expiry
+        if (!$userCandidate["password_expire"] || $userCandidate["password_expire"]<date('Y-m-d H:i:s')) {
+            return new AuthenticationTaskResult(false, 'PASSWORD_EXPIRED');
+        }
+
         unset($userCandidate["password"]);
 
         return new AuthenticationTaskResult(true, $userCandidate);
@@ -102,35 +107,64 @@ class PAv1Authentication extends AuthenticationInterface
 
     public function resetPassword(array $credentials): AuthenticationTaskResult
     {
-        // TODO: Implement resetPassword() method.
-        return new AuthenticationTaskResult(false, null);
+
+        /** @var AuthenticatedUserInterface $userClassName */
+        $userClassName = $this->getConfiguration()["user_class_name"];
+        
+        // Új jelszók egyformák
+        if($credentials["password"] !== $credentials["repassword"]) {
+            return new AuthenticationTaskResult(false, "MISMATCHED_PASSWORDS");
+        }
+
+        $resetToken = $credentials["token"];
+        $user = $userClassName::getUserByToken($resetToken);
+
+        // Token ellenőrzés
+        if ($user["reset_token"]!==$resetToken) {
+            return new AuthenticationTaskResult(false, "MISMATCHED_TOKENS");
+        }
+
+        // Jelszó policy
+        // 1. Jelszó history (utolsó 6 jelszó)
+        // 2. Jelszó erősség
+        
+
+        $user["password"] = $this->hashPassword($credentials["password"])->output;
+        $user["reset_token"] = null;
+        ConnectionManager::getInstance()->persist($user);
+
+        return new AuthenticationTaskResult(true, null);
     }
 
     public function changePassword(array $credentials): AuthenticationTaskResult
     {
-        // TODO: Implement changePassword() method.
-        return new AuthenticationTaskResult(false, null);
+
+        /** @var AuthenticatedUserInterface $userClassName */
+        $userClassName = $this->getConfiguration()["user_class_name"];
+
+
+        // Meglévő jelszó ellenőrzése
+        $checkPassword = $this->login(["username"=>$credentials["username"], "password" => $credentials["old_password"]]);
+        if (!$checkPassword->isSuccess()) {
+            return new AuthenticationTaskResult(false, "INVALID_PASSWORD");
+        }
+
+
+        // Új jelszók egyformák
+        if($credentials["password"] !== $credentials["repassword"]) {
+            $authResult = new AuthenticationTaskResult(false, "MISMATCHED_PASSWORDS");
+            return $authResult;
+        }
+
+        // Jelszó policy
+        // 1. Jelszó history (utolsó 6 jelszó)
+        // 2. Jelszó erősség
+        
+        $username = $credentials["username"];
+        $user = $userClassName::getUserByUsername($username);
+        $user["password"] = $this->hashPassword($credentials["password"])->output;
+        ConnectionManager::getInstance()->persist($user);
+
+        return new AuthenticationTaskResult(true, null);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
