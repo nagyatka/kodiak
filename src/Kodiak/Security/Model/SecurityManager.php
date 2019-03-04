@@ -242,8 +242,9 @@ class SecurityManager
      *
      */
     private function eraseSecuritySession(): void {
-        $newUser = new AnonymUser();
-        $this->setSecuritySession(false, time(), $newUser->getUserId(), $newUser->getUsername(), $newUser->getRoles());
+        session_destroy();
+        //$newUser = new AnonymUser();
+        //$this->setSecuritySession(false, time(), $newUser->getUserId(), $newUser->getUsername(), $newUser->getRoles());
     }
 
     /**
