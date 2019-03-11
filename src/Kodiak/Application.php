@@ -112,19 +112,19 @@ class Application implements \ArrayAccess
         catch (\Exception $exception) {
             $errorHandler = $kodiConf->getErrorResponseHandler();
             if ($exception instanceof HttpAuthRequiredException) {
-                print $errorHandler->error_401($request);
+                print $errorHandler->error_401($request, $exception);
             }
             elseif ($exception instanceof HttpAccessDeniedException) {
-                print $errorHandler->error_403($request);
+                print $errorHandler->error_403($request, $exception);
             }
             elseif($exception instanceof HttpNotFoundException) {
-                print $errorHandler->error_404($request);
+                print $errorHandler->error_404($request, $exception);
             }
             elseif ($exception instanceof HttpInternalServerErrorException) {
-                print $errorHandler->error_500($request);
+                print $errorHandler->error_500($request, $exception);
             }
             elseif ($exception instanceof HttpServiceTemporarilyUnavailableException) {
-                print $errorHandler->error_503($request);
+                print $errorHandler->error_503($request, $exception);
             }
             elseif ($exception instanceof RedirectException) {
                 $redirect = $exception->getRedirectUrl();
