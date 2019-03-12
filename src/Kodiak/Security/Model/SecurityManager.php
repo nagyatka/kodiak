@@ -269,6 +269,10 @@ class SecurityManager
         session_destroy();
     }
 
+    public function resetSecuritySessionVariables() {
+        $this->setSecuritySession(false, time(), null, null, null, false);
+    }
+
     /**
      * @return AuthenticationInterface
      */
