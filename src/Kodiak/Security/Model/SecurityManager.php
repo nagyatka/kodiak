@@ -11,6 +11,8 @@ use Kodiak\Security\Model\Authentication\AuthenticationRequest;
 use Kodiak\Security\Model\Authentication\AuthenticationTaskResult;
 use Kodiak\Security\Model\User\AnonymUser;
 use Kodiak\Security\Model\User\AuthenticatedUserInterface;
+use Kodiak\Security\Model\User\PendingUser;
+use Kodiak\Security\Model\User\Role;
 use Kodiak\Session\Session;
 
 class SecurityManager
@@ -20,6 +22,7 @@ class SecurityManager
     const SESS_USER_ID      = "user_id";
     const SESS_USERNAME     = "username";
     const SESS_ROLES        = "roles";
+    const SESS_IS_PENDING   = "is_pending";
 
     /**
      * @var int
@@ -66,8 +69,16 @@ class SecurityManager
             return new AnonymUser();
         }
 
+
+        // If it is a pending user
+        if(!isset($securitySession[self::SESS_LOGGED_IN]) || $securitySession[self::SESS_LOGGED_IN] === false) {
+            return new AnonymUser();
+        }
+        elseif($securitySession[self::SESS_LOGGED_IN] === true && $securitySession[self::SESS_IS_PENDING] === true) {
+            return new PendingUser($securitySession[self::SESS_USER_ID]);
+        }
         // Status and expiration time check
-        if($securitySession[self::SESS_LOGGED_IN] === true &&
+        elseif($securitySession[self::SESS_LOGGED_IN] === true &&
             (time() - $securitySession[self::SESS_UPDATED_AT] > $this->expiration_time)) {
             $newUser = new AnonymUser();
             $this->setSecuritySession(false, time(), $newUser->getUserId(), $newUser->getUsername(), $newUser->getRoles());
@@ -96,6 +107,13 @@ class SecurityManager
             return -1;
         }
 
+        // If it is a pending user
+        if(!isset($securitySession[self::SESS_LOGGED_IN]) || $securitySession[self::SESS_LOGGED_IN] === false) {
+            return -1;
+        }
+        elseif($securitySession[self::SESS_LOGGED_IN] === true && $securitySession[self::SESS_IS_PENDING] === true) {
+            return -1;
+        }
         // Status and expiration time check
         if($securitySession[self::SESS_LOGGED_IN] === true &&
             (time() - $securitySession[self::SESS_UPDATED_AT] > $this->expiration_time)) {
@@ -124,8 +142,11 @@ class SecurityManager
                 if($authenticationResult->isSuccess()) {
                     /** @var AuthenticatedUserInterface $user */
                     $user = $authenticationResult->getResult();
+                    $is_pending = $user->hasRole(Role::PENDING_USER);
                     // Save variables in session
-                    $this->setSecuritySession(true, time(), $user->getUserId(), $user->getUsername(), $user->getRoles());
+                    $this->setSecuritySession(true, time(), $user->getUserId(), $user->getUsername(),
+                        $user->getRoles(), $is_pending);
+                    session_regenerate_id();
                 }
                 return $authenticationResult;
 
@@ -220,9 +241,11 @@ class SecurityManager
      * @param int $user_id
      * @param string $username
      * @param array $roles
+     * @param bool $is_pending
      * @throws HttpInternalServerErrorException
      */
-    private function setSecuritySession(bool $logged_in, int $updated_at, ?int $user_id, ?string $username, ?array $roles) {
+    private function setSecuritySession(bool $logged_in, int $updated_at, ?int $user_id, ?string $username,
+                                        ?array $roles, $is_pending = false) {
         /** @var Session $session */
         $session = Application::get("session");
         if($session) {
@@ -231,7 +254,8 @@ class SecurityManager
                 self::SESS_UPDATED_AT   => $updated_at,
                 self::SESS_USER_ID      => $user_id,
                 self::SESS_USERNAME     => $username,
-                self::SESS_ROLES        => $roles
+                self::SESS_ROLES        => $roles,
+                self::SESS_IS_PENDING   => $is_pending
             ]);
         } else {
             throw new HttpInternalServerErrorException("MISSING_SESSION");
@@ -243,8 +267,6 @@ class SecurityManager
      */
     private function eraseSecuritySession(): void {
         session_destroy();
-        //$newUser = new AnonymUser();
-        //$this->setSecuritySession(false, time(), $newUser->getUserId(), $newUser->getUsername(), $newUser->getRoles());
     }
 
     /**
