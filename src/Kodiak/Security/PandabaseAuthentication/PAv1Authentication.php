@@ -192,7 +192,7 @@ class PAv1Authentication extends AuthenticationInterface
         $user = $userClassName::getUserByUsername($username);
         $user["password"] = $this->hashPassword($credentials["password"])->output;
 
-        if (!$user->checkPasswordHistory($user["password"])) {
+        if (!$user->checkPasswordHistory($credentials["password"])) {
             return new AuthenticationTaskResult(false, 'PASSWORD_IN_HISTORY');
         }
 
