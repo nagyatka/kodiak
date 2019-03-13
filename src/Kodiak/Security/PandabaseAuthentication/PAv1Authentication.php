@@ -44,7 +44,13 @@ class PAv1Authentication extends AuthenticationInterface
 
         // Check password
         if(!$this->checkPbkdf2($userCandidate,$passwordCandidate)) {
-            return new AuthenticationTaskResult(false, 'hibás jelszó!');
+            $userCandidate->incrementFaildPasswordCount();
+            return new AuthenticationTaskResult(false, 'PASSWORD_ERROR');
+        }
+
+        // Check lockout
+        if ($userCandidate->isLockedOut()) {
+            return new AuthenticationTaskResult(false, 'USER_LOCKED');            
         }
 
         // Check password expiry
@@ -54,7 +60,10 @@ class PAv1Authentication extends AuthenticationInterface
             }
         }
 
+        $userCandidate->unLock(); // reset the faild login count to 0     
+
         unset($userCandidate["password"]);
+        unset($userCandidate["mfa_secret"]);
 
         return new AuthenticationTaskResult(true, $userCandidate);
     }
@@ -133,6 +142,7 @@ class PAv1Authentication extends AuthenticationInterface
 
         $user["password"] = $this->hashPassword($credentials["password"])->output;
         $user["reset_token"] = null;
+        $user["failed_login_count"] = 0;
         ConnectionManager::getInstance()->persist($user);
 
         return new AuthenticationTaskResult(true, null);
@@ -155,25 +165,55 @@ class PAv1Authentication extends AuthenticationInterface
 
         // Check password
         if(!$this->checkPbkdf2($userCandidate,$credentials["old_password"])) {
-            return new AuthenticationTaskResult(false, 'hibás jelszó!');
+            return new AuthenticationTaskResult(false, 'PASSWORD_ERROR');
         }
-        
+
+        // Check lockout
+        if ($userCandidate->isLockedOut()) {
+            return new AuthenticationTaskResult(false, 'USER_LOCKED');            
+        }
 
         // Új jelszók egyformák
         if($credentials["password"] !== $credentials["repassword"]) {
             $authResult = new AuthenticationTaskResult(false, "MISMATCHED_PASSWORDS");
             return $authResult;
         }
+        if (!$this->checkPasswordComplexity($credentials["password"])) {
+            return new AuthenticationTaskResult(false, 'PASSWORD_COMPLEXITY_FAIL');
+        }
 
-        // Jelszó policy
-        // 1. Jelszó history (utolsó 6 jelszó)
-        // 2. Jelszó erősség
-        
         $username = $credentials["username"];
         $user = $userClassName::getUserByUsername($username);
         $user["password"] = $this->hashPassword($credentials["password"])->output;
-        ConnectionManager::getInstance()->persist($user);
 
+        if (!$user->checkPasswordHistory($user["password"])) {
+            return new AuthenticationTaskResult(false, 'PASSWORD_IN_HISTORY');
+        }
+
+        ConnectionManager::getInstance()->persist($user);
+        $user->addPasswordToHistory($user["password"]);
         return new AuthenticationTaskResult(true, null);
+    }
+
+    private function checkPasswordComplexity($password) {
+        $pw_ok = true;
+
+        if (strlen($pwd) < 10) {
+            $pw_ok = false;
+        }
+
+        if (!preg_match("#[0-9]+#", $pwd)) {
+            $pw_ok = false;
+        }
+
+        if (!preg_match("#[a-z]+#", $pwd)) {
+            $pw_ok = false;
+        }     
+
+        if (!preg_match("#[A-Z]+#", $pwd)) {
+            $pw_ok = false;
+        }     
+
+        return $pw_ok;        
     }
 }

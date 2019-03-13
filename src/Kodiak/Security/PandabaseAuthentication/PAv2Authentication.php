@@ -50,6 +50,7 @@ class PAv2Authentication extends PAv1Authentication
                 }
 
                 unset($pendingUser["password"]);
+                unset($pendingUser["mfa_secret"]);
                 return new AuthenticationTaskResult(true, $pendingUser);
             }
             session_destroy();
