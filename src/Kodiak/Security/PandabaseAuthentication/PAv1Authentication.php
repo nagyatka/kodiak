@@ -28,7 +28,7 @@ class PAv1Authentication extends AuthenticationInterface
      * @param array $credentials
      * @return AuthenticationTaskResult
      */
-    public function login(array $credentials): AuthenticationTaskResult
+    public function login(array $credentials, bool $allowExpiry = false): AuthenticationTaskResult
     {
         /** @var AuthenticatedUserInterface $userClassName */
         $userClassName = $this->getConfiguration()["user_class_name"];
@@ -44,15 +44,26 @@ class PAv1Authentication extends AuthenticationInterface
 
         // Check password
         if(!$this->checkPbkdf2($userCandidate,$passwordCandidate)) {
-            return new AuthenticationTaskResult(false, null);
+            $userCandidate->incrementFaildPasswordCount();
+            return new AuthenticationTaskResult(false, 'PASSWORD_ERROR');
         }
 
-        // Cseck password expiry
-        if (!$userCandidate["password_expire"] || $userCandidate["password_expire"]<date('Y-m-d H:i:s')) {
-            return new AuthenticationTaskResult(false, 'PASSWORD_EXPIRED');
+        // Check lockout
+        if ($userCandidate->isLockedOut()) {
+            return new AuthenticationTaskResult(false, 'USER_LOCKED');            
         }
+
+        // Check password expiry
+        if (!$allowExpiry) {
+            if (!$userCandidate["password_expire"] || $userCandidate["password_expire"]<date('Y-m-d H:i:s')) {
+                return new AuthenticationTaskResult(false, 'PASSWORD_EXPIRED');
+            }
+        }
+
+        $userCandidate->unLock(); // reset the faild login count to 0     
 
         unset($userCandidate["password"]);
+        unset($userCandidate["mfa_secret"]);
 
         return new AuthenticationTaskResult(true, $userCandidate);
     }
@@ -131,6 +142,7 @@ class PAv1Authentication extends AuthenticationInterface
 
         $user["password"] = $this->hashPassword($credentials["password"])->output;
         $user["reset_token"] = null;
+        $user["failed_login_count"] = 0;
         ConnectionManager::getInstance()->persist($user);
 
         return new AuthenticationTaskResult(true, null);
@@ -142,13 +154,24 @@ class PAv1Authentication extends AuthenticationInterface
         /** @var AuthenticatedUserInterface $userClassName */
         $userClassName = $this->getConfiguration()["user_class_name"];
 
+        $username = $credentials["username"];
+        $userCandidate = $userClassName::getUserByUsername($username);
 
-        // Meglévő jelszó ellenőrzése
-        $checkPassword = $this->login(["username"=>$credentials["username"], "password" => $credentials["old_password"]]);
-        if (!$checkPassword->isSuccess()) {
-            return new AuthenticationTaskResult(false, "INVALID_PASSWORD");
+
+        // If the username doesnt exist, we stop the auth process with error.
+        if(!$userCandidate->isValidUsername()) {
+            return new AuthenticationTaskResult(false, null);
         }
 
+        // Check password
+        if(!$this->checkPbkdf2($userCandidate,$credentials["old_password"])) {
+            return new AuthenticationTaskResult(false, 'PASSWORD_ERROR');
+        }
+
+        // Check lockout
+        if ($userCandidate->isLockedOut()) {
+            return new AuthenticationTaskResult(false, 'USER_LOCKED');            
+        }
 
         // Új jelszók egyformák
         if($credentials["password"] !== $credentials["repassword"]) {
@@ -156,15 +179,47 @@ class PAv1Authentication extends AuthenticationInterface
             return $authResult;
         }
 
-        // Jelszó policy
-        // 1. Jelszó history (utolsó 6 jelszó)
-        // 2. Jelszó erősség
-        
+        // New != Old
+        if($credentials["old_password"] == $credentials["password"]) {
+            return new AuthenticationTaskResult(false, "PASSWORD_IN_HISTORY");
+        }
+
+        if (!$this->checkPasswordComplexity($credentials["password"])) {
+            return new AuthenticationTaskResult(false, 'PASSWORD_COMPLEXITY_FAIL');
+        }
+
         $username = $credentials["username"];
         $user = $userClassName::getUserByUsername($username);
         $user["password"] = $this->hashPassword($credentials["password"])->output;
-        ConnectionManager::getInstance()->persist($user);
 
+        if (!$user->checkPasswordHistory($user["password"])) {
+            return new AuthenticationTaskResult(false, 'PASSWORD_IN_HISTORY');
+        }
+
+        ConnectionManager::getInstance()->persist($user);
+        $user->addPasswordToHistory($user["password"]);
         return new AuthenticationTaskResult(true, null);
+    }
+
+    private function checkPasswordComplexity($pwd) {
+        $pw_ok = true;
+
+        if (strlen($pwd) < 10) {
+            $pw_ok = false;
+        }
+
+        if (!preg_match("#[0-9]+#", $pwd)) {
+            $pw_ok = false;
+        }
+
+        if (!preg_match("#[a-z]+#", $pwd)) {
+            $pw_ok = false;
+        }     
+
+        if (!preg_match("#[A-Z]+#", $pwd)) {
+            $pw_ok = false;
+        }     
+
+        return $pw_ok;        
     }
 }

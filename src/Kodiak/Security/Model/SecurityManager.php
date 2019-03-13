@@ -191,7 +191,7 @@ class SecurityManager
                     return $authenticationResult;
                 }
                 else {
-                    throw new HttpAccessDeniedException();
+                    throw new HttpAccessDeniedException($authenticationResult->getResult());
                 }
                 break;
 
@@ -267,6 +267,7 @@ class SecurityManager
      */
     private function eraseSecuritySession(): void {
         session_destroy();
+        $this->resetSecuritySessionVariables();
     }
 
     public function resetSecuritySessionVariables() {
