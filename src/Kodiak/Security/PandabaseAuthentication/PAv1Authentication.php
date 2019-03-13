@@ -28,7 +28,7 @@ class PAv1Authentication extends AuthenticationInterface
      * @param array $credentials
      * @return AuthenticationTaskResult
      */
-    public function login(array $credentials): AuthenticationTaskResult
+    public function login(array $credentials, bool $allowExpiry = false): AuthenticationTaskResult
     {
         /** @var AuthenticatedUserInterface $userClassName */
         $userClassName = $this->getConfiguration()["user_class_name"];
@@ -44,12 +44,14 @@ class PAv1Authentication extends AuthenticationInterface
 
         // Check password
         if(!$this->checkPbkdf2($userCandidate,$passwordCandidate)) {
-            return new AuthenticationTaskResult(false, null);
+            return new AuthenticationTaskResult(false, 'hibás jelszó!');
         }
 
-        // Cseck password expiry
-        if (!$userCandidate["password_expire"] || $userCandidate["password_expire"]<date('Y-m-d H:i:s')) {
-            return new AuthenticationTaskResult(false, 'PASSWORD_EXPIRED');
+        // Check password expiry
+        if (!$allowExpiry) {
+            if (!$userCandidate["password_expire"] || $userCandidate["password_expire"]<date('Y-m-d H:i:s')) {
+                return new AuthenticationTaskResult(false, 'PASSWORD_EXPIRED');
+            }
         }
 
         unset($userCandidate["password"]);
@@ -142,13 +144,20 @@ class PAv1Authentication extends AuthenticationInterface
         /** @var AuthenticatedUserInterface $userClassName */
         $userClassName = $this->getConfiguration()["user_class_name"];
 
+        $username = $credentials["username"];
+        $userCandidate = $userClassName::getUserByUsername($username);
 
-        // Meglévő jelszó ellenőrzése
-        $checkPassword = $this->login(["username"=>$credentials["username"], "password" => $credentials["old_password"]]);
-        if (!$checkPassword->isSuccess()) {
-            return new AuthenticationTaskResult(false, "INVALID_PASSWORD");
+
+        // If the username doesnt exist, we stop the auth process with error.
+        if(!$userCandidate->isValidUsername()) {
+            return new AuthenticationTaskResult(false, null);
         }
 
+        // Check password
+        if(!$this->checkPbkdf2($userCandidate,$credentials["old_password"])) {
+            return new AuthenticationTaskResult(false, 'hibás jelszó!');
+        }
+        
 
         // Új jelszók egyformák
         if($credentials["password"] !== $credentials["repassword"]) {
