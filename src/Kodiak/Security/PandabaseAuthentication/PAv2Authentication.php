@@ -43,13 +43,20 @@ class PAv2Authentication extends PAv1Authentication
             $code = $credentials["code"];
 
             if($ga->verifyCode($pendingUser->get2FASecret(), $code, 2)) {
+
+                // Cseck password expiry
+                if (!$pendingUser["password_expire"] || $pendingUser["password_expire"]<date('Y-m-d H:i:s')) {
+                    return new AuthenticationTaskResult(false, 'PASSWORD_EXPIRED');
+                }
+
+                unset($pendingUser["password"]);
                 return new AuthenticationTaskResult(true, $pendingUser);
             }
             session_destroy();
             return new AuthenticationTaskResult(false, "Wrong 2FA code");
         }
 
-        $loginResult = parent::login($credentials);
+        $loginResult = parent::login($credentials, true);
         if($loginResult->isSuccess()) {
             return new AuthenticationTaskResult(true, new PendingUser($loginResult->getResult()->getUserId()));
         }
