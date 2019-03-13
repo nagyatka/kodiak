@@ -19,6 +19,9 @@ class SimpleRouter implements RouterInterface
      */
     private $routes;
 
+    /** @var RouterHook[] */
+    private $hooks;
+
     /**
      * @var array
      */
@@ -30,6 +33,12 @@ class SimpleRouter implements RouterInterface
      */
     public function __construct(array $params)
     {
+        $this->hooks = [];
+        if(isset($params["hooks"])) {
+            foreach ($params["hooks"] as $hookClassName) {
+                $this->hooks[] = new $hookClassName();
+            }
+        }
     }
 
 
@@ -95,6 +104,11 @@ class SimpleRouter implements RouterInterface
                         break;
                     }
                 }
+                // Runs the registered hooks
+                foreach ($this->hooks as $hook) {
+                    $hook->run($this->actualRoute);
+                }
+
                 return [
                     "handler" => $routeInfo[1],
                     "params" => $routeInfo[2]
@@ -110,5 +124,10 @@ class SimpleRouter implements RouterInterface
     public function getActualRoute()
     {
         return $this->actualRoute;
+    }
+
+    public function addHook(RouterHook $hook)
+    {
+        $this->hooks[] = $hook;
     }
 }

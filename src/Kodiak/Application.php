@@ -91,7 +91,9 @@ class Application implements \ArrayAccess
      * @param bool $cmd_line
      */
     public function run(array $conf, $cmd_line = false): void {
-        ob_start();
+        if (!$cmd_line) {
+            ob_start();
+        }
         $kodiConf = new KodiConf($conf);
         $request = $cmd_line ? CronRequest::get() : Request::get();
         try {
@@ -110,19 +112,19 @@ class Application implements \ArrayAccess
         catch (\Exception $exception) {
             $errorHandler = $kodiConf->getErrorResponseHandler();
             if ($exception instanceof HttpAuthRequiredException) {
-                print $errorHandler->error_401($request);
+                print $errorHandler->error_401($request, $exception);
             }
             elseif ($exception instanceof HttpAccessDeniedException) {
-                print $errorHandler->error_403($request);
+                print $errorHandler->error_403($request, $exception);
             }
             elseif($exception instanceof HttpNotFoundException) {
-                print $errorHandler->error_404($request);
+                print $errorHandler->error_404($request, $exception);
             }
             elseif ($exception instanceof HttpInternalServerErrorException) {
-                print $errorHandler->error_500($request);
+                print $errorHandler->error_500($request, $exception);
             }
             elseif ($exception instanceof HttpServiceTemporarilyUnavailableException) {
-                print $errorHandler->error_503($request);
+                print $errorHandler->error_503($request, $exception);
             }
             elseif ($exception instanceof RedirectException) {
                 $redirect = $exception->getRedirectUrl();
@@ -132,7 +134,11 @@ class Application implements \ArrayAccess
                 print $errorHandler->custom_error($request, $exception);
             }
         }
-        ob_end_flush();
+        finally {
+            if (!$cmd_line) {
+                ob_end_flush();
+            }
+        }
     }
 
     /**
