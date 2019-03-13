@@ -135,15 +135,20 @@ class PAv1Authentication extends AuthenticationInterface
             return new AuthenticationTaskResult(false, "MISMATCHED_TOKENS");
         }
 
-        // Jelszó policy
-        // 1. Jelszó history (utolsó 6 jelszó)
-        // 2. Jelszó erősség
+        if (!$this->checkPasswordComplexity($credentials["password"])) {
+            return new AuthenticationTaskResult(false, 'PASSWORD_COMPLEXITY_FAIL');
+        }
+
+        if (!$user->checkPasswordHistory($credentials["password"])) {
+            return new AuthenticationTaskResult(false, 'PASSWORD_IN_HISTORY');
+        }
         
 
         $user["password"] = $this->hashPassword($credentials["password"])->output;
         $user["reset_token"] = null;
         $user["failed_login_count"] = 0;
         ConnectionManager::getInstance()->persist($user);
+        $user->addPasswordToHistory($user["password"]);
 
         return new AuthenticationTaskResult(true, null);
     }
@@ -188,14 +193,13 @@ class PAv1Authentication extends AuthenticationInterface
             return new AuthenticationTaskResult(false, 'PASSWORD_COMPLEXITY_FAIL');
         }
 
-        $username = $credentials["username"];
-        $user = $userClassName::getUserByUsername($username);
-        $user["password"] = $this->hashPassword($credentials["password"])->output;
-
-        if (!$user->checkPasswordHistory($user["password"])) {
+        if (!$userCandidate->checkPasswordHistory($credentials["password"])) {
             return new AuthenticationTaskResult(false, 'PASSWORD_IN_HISTORY');
         }
 
+        $username = $credentials["username"];
+        $user = $userClassName::getUserByUsername($username);
+        $user["password"] = $this->hashPassword($credentials["password"])->output;
         ConnectionManager::getInstance()->persist($user);
         $user->addPasswordToHistory($user["password"]);
         return new AuthenticationTaskResult(true, null);
