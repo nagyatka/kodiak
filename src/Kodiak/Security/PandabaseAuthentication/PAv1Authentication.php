@@ -178,6 +178,12 @@ class PAv1Authentication extends AuthenticationInterface
             $authResult = new AuthenticationTaskResult(false, "MISMATCHED_PASSWORDS");
             return $authResult;
         }
+
+        // New != Old
+        if($credentials["old_password"] == $credentials["password"]) {
+            return new AuthenticationTaskResult(false, "PASSWORD_IN_HISTORY");
+        }
+
         if (!$this->checkPasswordComplexity($credentials["password"])) {
             return new AuthenticationTaskResult(false, 'PASSWORD_COMPLEXITY_FAIL');
         }
@@ -195,7 +201,7 @@ class PAv1Authentication extends AuthenticationInterface
         return new AuthenticationTaskResult(true, null);
     }
 
-    private function checkPasswordComplexity($password) {
+    private function checkPasswordComplexity($pwd) {
         $pw_ok = true;
 
         if (strlen($pwd) < 10) {
