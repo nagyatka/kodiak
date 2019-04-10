@@ -44,6 +44,9 @@ class SecurityManager
      */
     private $userClassName;
 
+
+    private $authSelector;
+
     /**
      * SecurityManager constructor.
      * @param $configuration
@@ -54,6 +57,14 @@ class SecurityManager
         $this->userClassName                = $configuration["user_class_name"];
         $this->authenticationConfiguration  = $configuration["authentication"];
         $this->authentication               = null;
+
+        if(isset($configuration["auth_selector"])) {
+            $this->authSelector = $configuration["auth_selector"];
+        } else {
+            $this->authSelector = function ($auth_keys) {
+                return $auth_keys[0];
+            };
+        }
     }
 
     /**
@@ -191,7 +202,7 @@ class SecurityManager
                     return $authenticationResult;
                 }
                 else {
-                    throw new HttpAccessDeniedException($authenticationResult->getResult());
+                    throw new HttpAccessDeniedException();
                 }
                 break;
 
@@ -267,7 +278,6 @@ class SecurityManager
      */
     private function eraseSecuritySession(): void {
         session_destroy();
-        $this->resetSecuritySessionVariables();
     }
 
     public function resetSecuritySessionVariables() {
@@ -279,8 +289,15 @@ class SecurityManager
      */
     private function getAuthenticationInterface(): AuthenticationInterface {
         if(!$this->authentication) {
-            $authenticationClassName = $this->authenticationConfiguration["class_name"];
-            $params = $this->authenticationConfiguration["parameters"];
+
+            $auth_keys = array_keys($this->authenticationConfiguration);
+            $authSelector = $this->authSelector;
+            $selected_key = $authSelector($auth_keys);
+
+            $selected_auth = $this->authenticationConfiguration[$selected_key];
+
+            $authenticationClassName = $selected_auth["class_name"];
+            $params = $selected_auth["parameters"];
             $params = array_merge($params,[
                 "user_class_name" => $this->userClassName
             ]);

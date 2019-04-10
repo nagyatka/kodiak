@@ -70,7 +70,7 @@ abstract class AuthenticationInterface
      * @param string|bool $salt
      * @return \stdClass
      */
-    protected function hashPassword($pw, $salt=false) {
+    public function hashPassword($pw, $salt=false) {
         // Salt generálás
         if (!$salt) {
             $salt = bin2hex(openssl_random_pseudo_bytes(self::HASH_SALT_LENGTH));

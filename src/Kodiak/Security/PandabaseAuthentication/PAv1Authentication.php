@@ -193,12 +193,13 @@ class PAv1Authentication extends AuthenticationInterface
             return new AuthenticationTaskResult(false, 'PASSWORD_COMPLEXITY_FAIL');
         }
 
-        if (!$userCandidate->checkPasswordHistory($credentials["password"])) {
+        $username = $credentials["username"];
+        $user = $userClassName::getUserByUsername($username);
+
+        if (!$user->checkPasswordHistory($credentials["password"])) {
             return new AuthenticationTaskResult(false, 'PASSWORD_IN_HISTORY');
         }
 
-        $username = $credentials["username"];
-        $user = $userClassName::getUserByUsername($username);
         $user["password"] = $this->hashPassword($credentials["password"])->output;
         ConnectionManager::getInstance()->persist($user);
         $user->addPasswordToHistory($user["password"]);
