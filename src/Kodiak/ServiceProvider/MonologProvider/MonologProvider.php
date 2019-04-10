@@ -55,7 +55,7 @@ class MonologProvider implements ServiceProviderInterface
                 return null;
             }
             elseif (count($loggerStore) == 1) {
-                return $loggerStore[0];
+                return array_values($loggerStore)[0];
             }
             else {
                 return $loggerStore;
