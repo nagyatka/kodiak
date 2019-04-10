@@ -289,10 +289,7 @@ class SecurityManager
      */
     private function getAuthenticationInterface(): AuthenticationInterface {
         if(!$this->authentication) {
-
-            $auth_keys = array_keys($this->authenticationConfiguration);
-            $authSelector = $this->authSelector;
-            $selected_key = $authSelector($auth_keys);
+            $selected_key = $this->getAuthDialect();
 
             $selected_auth = $this->authenticationConfiguration[$selected_key];
 
@@ -304,6 +301,12 @@ class SecurityManager
             $this->authentication = new $authenticationClassName($params);
         }
         return $this->authentication;
+    }
+
+    public function getAuthDialect() {
+        $auth_keys = array_keys($this->authenticationConfiguration);
+        $authSelector = $this->authSelector;
+        return $authSelector($auth_keys);
     }
 
     /**
