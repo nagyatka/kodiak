@@ -5,12 +5,14 @@ namespace Kodiak;
 use Kodiak\Core\Core;
 use Kodiak\Core\KodiConf;
 use Kodiak\Exception\ConfigurationException;
+use Kodiak\Exception\CoreException;
 use Kodiak\Exception\Http\HttpAccessDeniedException;
 use Kodiak\Exception\Http\HttpAuthRequiredException;
 use Kodiak\Exception\Http\HttpInternalServerErrorException;
 use Kodiak\Exception\Http\HttpNotFoundException;
 use Kodiak\Exception\Http\HttpServiceTemporarilyUnavailableException;
 use Kodiak\Exception\RedirectException;
+use Kodiak\Hook\ResponseHookInterface;
 use Kodiak\Request\CronRequest;
 use Kodiak\Request\Request;
 use Pimple\Container;
@@ -89,6 +91,7 @@ class Application implements \ArrayAccess
     /**
      * @param array $conf
      * @param bool $cmd_line
+     * @throws ConfigurationException
      */
     public function run(array $conf, $cmd_line = false): void {
         if (!$cmd_line) {
@@ -96,6 +99,7 @@ class Application implements \ArrayAccess
         }
         $kodiConf = new KodiConf($conf);
         $request = $cmd_line ? CronRequest::get() : Request::get();
+        $response = null;
         try {
 
             // Init application (init services and environment) using KodiConf
@@ -106,35 +110,57 @@ class Application implements \ArrayAccess
             $module = $this->core->processRequest($kodiConf,$request);
 
             // Run the appropriate module and print result
-            print $module->run();
+            $response = $module->run();
 
         }
         catch (\Exception $exception) {
             $errorHandler = $kodiConf->getErrorResponseHandler();
             if ($exception instanceof HttpAuthRequiredException) {
-                print $errorHandler->error_401($request, $exception);
+                $response = $errorHandler->error_401($request, $exception);
             }
             elseif ($exception instanceof HttpAccessDeniedException) {
-                print $errorHandler->error_403($request, $exception);
+                $response = $errorHandler->error_403($request, $exception);
             }
             elseif($exception instanceof HttpNotFoundException) {
-                print $errorHandler->error_404($request, $exception);
+                $response = $errorHandler->error_404($request, $exception);
             }
             elseif ($exception instanceof HttpInternalServerErrorException) {
-                print $errorHandler->error_500($request, $exception);
+                $response = $errorHandler->error_500($request, $exception);
             }
             elseif ($exception instanceof HttpServiceTemporarilyUnavailableException) {
-                print $errorHandler->error_503($request, $exception);
+                $response = $errorHandler->error_503($request, $exception);
             }
             elseif ($exception instanceof RedirectException) {
                 $redirect = $exception->getRedirectUrl();
                 header("Location:$redirect");
             }
             else {
-                print $errorHandler->custom_error($request, $exception);
+                $response = $errorHandler->custom_error($request, $exception);
             }
         }
         finally {
+
+            $responseHookConfiguration = $this->getKodiConf()->getHooksConfiguration();
+            foreach ($responseHookConfiguration as $hook) {
+                /** @var ResponseHookInterface $r_hook */
+                $r_hook = null;
+                if (is_string($hook)) {
+                    $r_hook = new $hook();
+                }
+                elseif (is_array($hook)) {
+                    $hookClassName  = $hook["class_name"];
+                    $hookParameters = $hook["parameters"];
+                    if(!$hookParameters) $hookParameters = [];
+                    $r_hook = new $hookClassName($hookParameters);
+                }
+                //else {
+                   // Log unknown config
+                //}
+                $r_hook->process($this->getKodiConf(), $request, $response);
+            }
+
+            print $response;
+
             if (!$cmd_line) {
                 ob_end_flush();
             }

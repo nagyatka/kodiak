@@ -12,6 +12,7 @@ class KodiConf
 {
     const ENVIRONMENT       = "environment";
     const HOOKS             = "hooks";
+    const RESPONSE_HOOKS    = "response_hook";
     const SERVICES          = "services";
     const MODULES           = "modules";
     const ROUTER            = "router";
@@ -111,6 +112,14 @@ class KodiConf
         }
 
         return $routes;
+    }
+
+    public function getResponseHookConfiguration() {
+        if(!isset($this->monolithicConfiguration[self::RESPONSE_HOOKS])){
+            // Log debug "Missing hooks configuration"
+            return [];
+        }
+        return $this->monolithicConfiguration[self::RESPONSE_HOOKS];
     }
 
     /**

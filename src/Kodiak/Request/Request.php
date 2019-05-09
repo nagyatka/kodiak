@@ -31,11 +31,16 @@ class Request
     private $handlerParameters;
 
     /**
+     * @var array
+     */
+    private $additionalParameters;
+
+    /**
      * Request constructor.
      */
     protected function __construct()
     {
-
+        $this->additionalParameters = [];
     }
 
     /**
@@ -118,5 +123,18 @@ class Request
 
     public function getUri(): string {
         return $_SERVER['REQUEST_URI'];
+    }
+
+    /**
+     * @param array $additionalParameters
+     */
+    public function setAdditionalParameters(array $additionalParameters)
+    {
+        $this->additionalParameters = $additionalParameters;
+    }
+
+    public function getAdditionalParameter($parameterName)
+    {
+        return isset($this->additionalParameters[$parameterName]) ? $this->additionalParameters[$parameterName] : null;
     }
 }

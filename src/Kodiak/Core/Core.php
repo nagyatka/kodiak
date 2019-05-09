@@ -29,6 +29,7 @@ class Core
      * Core constructor.
      * @param Application $application
      * @throws CoreException
+     * @throws \Kodiak\Exception\ConfigurationException
      */
     public function __construct(Application $application)
     {
@@ -57,6 +58,8 @@ class Core
      * @param KodiConf $kodiConf
      * @param Request $request
      * @return Module
+     * @throws \Kodiak\Exception\ConfigurationException
+     * @throws \Kodiak\Exception\Http\HttpNotFoundException
      */
     public function processRequest(KodiConf $kodiConf, Request $request): Module {
 
@@ -80,9 +83,15 @@ class Core
         }
 
         // Run router
-        $routerResult = $this->router->findRoute($request->getHttpMethod(),$request->getUri());
+        $routerResult = $this->router->findRoute($request->getHttpMethod(), $request->getUri());
         $parts = $controllerParts = explode("::", $routerResult["handler"]);
 
+        // Add existing additional parameters
+        $request->setAdditionalParameters(array_diff_assoc($this->router->getActualRoute(), [
+            "method"    => null,
+            "url"       => null,
+            "handler"   => null,
+        ]));
 
         // Initialize module
         $moduleClassName = $parts[0];
