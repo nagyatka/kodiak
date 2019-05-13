@@ -86,6 +86,9 @@ class Core
         $routerResult = $this->router->findRoute($request->getHttpMethod(), $request->getUri());
         $parts = $controllerParts = explode("::", $routerResult["handler"]);
 
+        $request->setHandlerController($parts[1]);
+        $request->setHandlerMethod($parts[2]);
+
         // Add existing additional parameters
         $request->setAdditionalParameters(array_diff_assoc($this->router->getActualRoute(), [
             "method"    => null,
