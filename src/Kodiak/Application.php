@@ -140,7 +140,7 @@ class Application implements \ArrayAccess
         }
         finally {
 
-            $responseHookConfiguration = $this->getKodiConf()->getHooksConfiguration();
+            $responseHookConfiguration = $this->getKodiConf()->getResponseHookConfiguration();
             foreach ($responseHookConfiguration as $hook) {
                 /** @var ResponseHookInterface $r_hook */
                 $r_hook = null;
