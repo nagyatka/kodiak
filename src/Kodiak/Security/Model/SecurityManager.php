@@ -202,7 +202,7 @@ class SecurityManager
                     return $authenticationResult;
                 }
                 else {
-                    throw new HttpAccessDeniedException();
+                    throw new HttpAccessDeniedException($authenticationResult->getResult());
                 }
                 break;
 
