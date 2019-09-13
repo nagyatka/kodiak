@@ -139,4 +139,11 @@ class KodiConf
         }
         return new DefaultErrorResponse();
     }
+
+    /**
+     * @return array
+     */
+    public function getMonolithicConfiguration() {
+        return $this->monolithicConfiguration;
+    }
 }

@@ -25,7 +25,8 @@
         "nagyatka/pandabase": "v0.20.*",
         "symfony/http-foundation": "v3.3.*",
         "twig/twig": "v2.4.*",
-        "phpgangsta/googleauthenticator": "dev-master"
+        "phpgangsta/googleauthenticator": "dev-master",
+        "ext-openssl": "*"
     },
     "require-dev": {
         "phpunit/phpunit": "5.4.8"

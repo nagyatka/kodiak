@@ -70,12 +70,12 @@ abstract class AuthenticationInterface
      * @param string|bool $salt
      * @return \stdClass
      */
-    public function hashPassword($pw, $salt=false) {
+    public static function hashPassword($pw, $salt=false) {
         // Salt generálás
         if (!$salt) {
             $salt = bin2hex(openssl_random_pseudo_bytes(self::HASH_SALT_LENGTH));
         }
-        $hash = $this->generatePbkdf2(self::HASH_ALGORITHM, $pw, $salt, self::HASH_COST, 32);
+        $hash = self::generatePbkdf2(self::HASH_ALGORITHM, $pw, $salt, self::HASH_COST, 32);
         $r = new \stdClass();
         $r->output = $salt.$hash;
         $r->salt = $salt;
@@ -94,7 +94,7 @@ abstract class AuthenticationInterface
      * @param bool $raw_output
      * @return bool|mixed|string
      */
-    protected function generatePbkdf2($algorithm, $password, $salt, $count, $key_length, $raw_output = false)
+    protected static function generatePbkdf2($algorithm, $password, $salt, $count, $key_length, $raw_output = false)
     {
         $algorithm = strtolower($algorithm);
         if(!in_array($algorithm, hash_algos(), true))
