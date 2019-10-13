@@ -4,8 +4,6 @@ namespace Kodiak\Core;
 
 
 use Kodiak\Application;
-use Kodiak\Core\Module\Module;
-use Kodiak\Core\Module\ModuleParams;
 use Kodiak\Core\Router\RouterInterface;
 use Kodiak\Core\Router\SimpleRouter;
 use Kodiak\Exception\CoreException;
@@ -57,11 +55,11 @@ class Core
     /**
      * @param KodiConf $kodiConf
      * @param Request $request
-     * @return Module
+     * @return RequestHandler
      * @throws \Kodiak\Exception\ConfigurationException
      * @throws \Kodiak\Exception\Http\HttpNotFoundException
      */
-    public function processRequest(KodiConf $kodiConf, Request $request): Module {
+    public function processRequest(KodiConf $kodiConf, Request $request): RequestHandler {
 
         // Init router
         $routerConfiguration = $kodiConf->getRouterConfiguration();
@@ -86,8 +84,8 @@ class Core
         $routerResult = $this->router->findRoute($request->getHttpMethod(), $request->getUri());
         $parts = $controllerParts = explode("::", $routerResult["handler"]);
 
-        $request->setHandlerController($parts[1]);
-        $request->setHandlerMethod($parts[2]);
+        $request->setHandlerController($parts[0]);
+        $request->setHandlerMethod($parts[1]);
 
         // Add existing additional parameters
         $request->setAdditionalParameters(array_diff_assoc($this->router->getActualRoute(), [
@@ -96,19 +94,13 @@ class Core
             "handler"   => null,
         ]));
 
-        // Initialize module
-        $moduleClassName = $parts[0];
-        /** @var Module $module */
-        $module = new $moduleClassName();
-        $module->setControllerName($parts[1]);
-        $module->setMethod($parts[2]);
-        $module->setUrlParams($routerResult["params"]);
-        if(isset($kodiConf->getModulesConfiguration()[$moduleClassName])) {
-            ModuleParams::setParams($kodiConf->getModulesConfiguration()[$moduleClassName]);
-        }
-        $module->before();
+        /** @var RequestHandler $requestHandler */
+        $requestHandler = new RequestHandler();
+        $requestHandler->setControllerName($parts[0]);
+        $requestHandler->setMethod($parts[1]);
+        $requestHandler->setUrlParams($routerResult["params"]);
 
-        return $module;
+        return $requestHandler;
     }
 
     /**

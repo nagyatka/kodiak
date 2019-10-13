@@ -14,7 +14,6 @@ class KodiConf
     const HOOKS             = "hooks";
     const RESPONSE_HOOKS    = "response_hook";
     const SERVICES          = "services";
-    const MODULES           = "modules";
     const ROUTER            = "router";
     const ROUTES            = "routes";
     const ERROR_HANDLER     = "error_handler";
@@ -87,31 +86,11 @@ class KodiConf
      * @throws ConfigurationException
      */
     public function getRoutesConfiguration(): array {
-        $routes = [];
-
         // Load project level routes
         if(!isset($this->monolithicConfiguration[self::ROUTES]))
             throw new ConfigurationException("Missing routes configuration");
-        $projectRoutes = $this->monolithicConfiguration[self::ROUTES];
-        foreach ($projectRoutes as &$projectRoute) {
-            $projectRoute["handler"] = ProjectModule::class."::".$projectRoute["handler"];
-        }
-        $routes = array_merge($routes,$projectRoutes);
+        return $this->monolithicConfiguration[self::ROUTES];
 
-        // Load module level routes
-        $modulesConfiguration = $this->getModulesConfiguration();
-        foreach ($modulesConfiguration as $moduleClassName => $moduleParams) {
-            // TODO: Enable to override module routes from KodiConf if necessary
-            /** @var Module $module */
-            $module = new $moduleClassName();
-            $moduleRoutes = $module->getRoutes();
-            foreach ($moduleRoutes as &$moduleRoute) {
-                $moduleRoute["handler"] = $module."::".$moduleRoute["handler"];
-            }
-            $routes = array_merge($routes,$moduleRoutes);
-        }
-
-        return $routes;
     }
 
     public function getResponseHookConfiguration() {

@@ -107,10 +107,10 @@ class Application implements \ArrayAccess
 
             // Process request
             $this->core = new Core($this);
-            $module = $this->core->processRequest($kodiConf,$request);
+            $requestHandler = $this->core->processRequest($kodiConf,$request);
 
             // Run the appropriate module and print result
-            $response = $module->run();
+            $response = $requestHandler->run();
 
         }
         catch (\Exception $exception) {
