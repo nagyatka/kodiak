@@ -27,6 +27,12 @@ abstract class ContentProvider
         $this->configuration = $configuration;
     }
 
+
+    public function setValue($name, $value) {
+        $this->configuration[$name] = $value;
+    }
+
+
     /**
      * @return array
      */

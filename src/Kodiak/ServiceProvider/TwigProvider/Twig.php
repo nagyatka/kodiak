@@ -131,6 +131,10 @@ class Twig
 
                 if(array_key_exists($desiredFrame,$templates)) {
                     $pageFrameName = $templates[$desiredFrame];
+                    /** @var ContentProvider $contentProvider */
+                    foreach ($this->contentProviders as $contentProvider) {
+                        $contentProvider->setValue("active_frame",$desiredFrame);
+                    }
                 }
                 else {
                     throw new HttpInternalServerErrorException("Undefined page_template path in twig. Check the configuration!");
@@ -138,6 +142,7 @@ class Twig
             } else {
                 $pageFrameName = $this->configuration[self::PAGE_TEMPLATE_PATH];
             }
+
             $parameters["app"]["content_template_name"] = $templateName;
             return $this->twig->render($pageFrameName,$parameters);
         }
