@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Ilx\Module\Security\Model\Auth;
+namespace Kodiak\Security\Model\Authentication;
 
 /**
  * Class AuthSelectors
