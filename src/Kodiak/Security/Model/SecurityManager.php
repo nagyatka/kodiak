@@ -3,6 +3,8 @@
 namespace Kodiak\Security\Model;
 
 
+use Ilx\Module\Security\Model\Auth\AuthenticationMode;
+use Ilx\Module\Security\Model\Auth\AuthSelectors;
 use Kodiak\Application;
 use Kodiak\Exception\Http\HttpAccessDeniedException;
 use Kodiak\Exception\Http\HttpInternalServerErrorException;
@@ -30,22 +32,14 @@ class SecurityManager
     private $expiration_time;
 
     /**
-     * @var array
+     * @var AuthenticationMode[]
      */
-    private $authenticationConfiguration;
-
-    /**
-     * @var AuthenticationInterface
-     */
-    private $authentication;
+    private $authentication_modes;
 
     /**
      * @var string
      */
-    private $userClassName;
-
-
-    private $authSelector;
+    private $auth_selector;
 
     /**
      * SecurityManager constructor.
@@ -53,18 +47,16 @@ class SecurityManager
      */
     public function __construct($configuration)
     {
-        $this->expiration_time              = $configuration["expiration_time"];
-        $this->userClassName                = $configuration["user_class_name"];
-        $this->authenticationConfiguration  = $configuration["authentication"];
-        $this->authentication               = null;
-
-        if(isset($configuration["auth_selector"])) {
-            $this->authSelector = $configuration["auth_selector"];
-        } else {
-            $this->authSelector = function ($auth_keys) {
-                return $auth_keys[0];
-            };
+        $this->expiration_time      = $configuration["sess_exp_time"];
+        $this->authentication_modes = [];
+        foreach ($configuration["auth_modes"] as $auth_mode) {
+            $class_name = $auth_mode["class_name"];
+            $parameters = $auth_mode["parameters"];
+            /** @var AuthenticationMode $mode */
+            $mode = new $class_name($parameters);
+            $this->authentication_modes[$mode::name()] = $mode;
         }
+        $this->auth_selector = AuthSelectors::get($configuration["auth_selector"]);
     }
 
     /**
@@ -97,7 +89,7 @@ class SecurityManager
         }
         else {
             /** @var AuthenticatedUserInterface $userClassName */
-            $userClassName = $this->userClassName;
+            $userClassName = $this->getUserClass($securitySession[self::SESS_USERNAME]);
             return $userClassName::getUserFromSecuritySession(
                 $securitySession[self::SESS_USER_ID],
                 $securitySession[self::SESS_USERNAME],
@@ -143,7 +135,18 @@ class SecurityManager
      * @throws HttpAccessDeniedException
      */
     public function handleAuthenticationRequest(AuthenticationRequest $request): AuthenticationTaskResult {
-        $authentication = $this->getAuthenticationInterface();
+
+        // Elpször ki kell választani, hogy milyen authentikációs móddal tudunk működni.
+        // Ehhez kell egy username, amit vagy az aktuális requestből lehet begyűjteni
+        if(array_key_exists(self::SESS_USERNAME, $request->getCredentials())) {
+            $username = $request->getCredentials()[self::SESS_USERNAME];
+        }
+        // Vagy az aktuális sessionből. Előfordulhat, hogy a username null
+        else {
+            $username = $this->getUser()->getUsername();
+        }
+        $authentication = $this->getAuthenticationInterface($username);
+
         switch ($request->getType()) {
             /*
              * Handle login request
@@ -280,33 +283,46 @@ class SecurityManager
         session_destroy();
     }
 
+    /**
+     * @throws HttpInternalServerErrorException
+     */
     public function resetSecuritySessionVariables() {
         $this->setSecuritySession(false, time(), null, null, null, false);
     }
 
     /**
+     * @param string $username
      * @return AuthenticationInterface
      */
-    private function getAuthenticationInterface(): AuthenticationInterface {
-        if(!$this->authentication) {
-            $selected_key = $this->getAuthDialect();
-
-            $selected_auth = $this->authenticationConfiguration[$selected_key];
-
-            $authenticationClassName = $selected_auth["class_name"];
-            $params = $selected_auth["parameters"];
-            $params = array_merge($params,[
-                "user_class_name" => $this->userClassName
-            ]);
-            $this->authentication = new $authenticationClassName($params);
-        }
-        return $this->authentication;
+    private function getAuthenticationInterface($username): AuthenticationInterface {
+        return $this->getAuthMode($username)->getAuthenticationInterface();
     }
 
-    public function getAuthDialect() {
-        $auth_keys = array_keys($this->authenticationConfiguration);
-        $authSelector = $this->authSelector;
-        return $authSelector($auth_keys);
+    /**
+     * Visszaadja az aktuálisan érvényes authentikációs módokat.
+     *
+     * @return array
+     */
+    public function getAuthModes() {
+        return array_keys($this->authentication_modes);
+    }
+
+    /**
+     * @param $username
+     * @return AuthenticationMode
+     */
+    public function getAuthMode($username) {
+        $auth_selector = $this->auth_selector;
+        return call_user_func($auth_selector, $this->getAuthModes(), $username);
+    }
+
+    /**
+     * Visszaadja az aktuálisan érvényes authentikációs módot a felhasználói adatokat is figyelembe véve
+     * @param string $username
+     * @return mixed
+     */
+    public function getUserClass($username) {
+        return $this->getAuthMode($username)->userClass();
     }
 
     /**
