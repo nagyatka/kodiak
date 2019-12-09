@@ -54,4 +54,11 @@ abstract class AuthenticationMode
      */
     public abstract function tables();
 
+    /**
+     * Jogosultságok, amik a routes-ban megadott útvonalakhoz kellenek.
+     * 
+     * @return mixed
+     */
+    public abstract function permissions();
+
 }
