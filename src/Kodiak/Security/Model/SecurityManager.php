@@ -317,10 +317,7 @@ class SecurityManager
     public function getAuthMode($username) {
         $auth_selector = $this->auth_selector;
         $mode = call_user_func($auth_selector, $this->getAuthModes(), $username);
-        $mode_class = $mode["class_name"];
-        $mode_params = $mode["parameters"];
-        return new $mode_class($mode_params);
-
+        return $this->authentication_modes[$mode];
     }
 
     /**
