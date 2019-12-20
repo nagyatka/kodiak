@@ -3,14 +3,14 @@
 namespace Kodiak\Security\Model;
 
 
-use Ilx\Module\Security\Model\Auth\AuthenticationMode;
-use Ilx\Module\Security\Model\Auth\AuthSelectors;
 use Kodiak\Application;
 use Kodiak\Exception\Http\HttpAccessDeniedException;
 use Kodiak\Exception\Http\HttpInternalServerErrorException;
 use Kodiak\Security\Model\Authentication\AuthenticationInterface;
+use Kodiak\Security\Model\Authentication\AuthenticationMode;
 use Kodiak\Security\Model\Authentication\AuthenticationRequest;
 use Kodiak\Security\Model\Authentication\AuthenticationTaskResult;
+use Kodiak\Security\Model\Authentication\AuthSelectors;
 use Kodiak\Security\Model\User\AnonymUser;
 use Kodiak\Security\Model\User\AuthenticatedUserInterface;
 use Kodiak\Security\Model\User\PendingUser;
@@ -61,6 +61,7 @@ class SecurityManager
 
     /**
      * @return AuthenticatedUserInterface
+     * @throws HttpInternalServerErrorException
      */
     public function getUser(): AuthenticatedUserInterface {
 
@@ -100,6 +101,7 @@ class SecurityManager
 
     /**
      * @return int
+     * @throws HttpInternalServerErrorException
      */
     public function getUserId(): ?int {
         // Get session
@@ -133,6 +135,7 @@ class SecurityManager
      * @param AuthenticationRequest $request
      * @return AuthenticationTaskResult
      * @throws HttpAccessDeniedException
+     * @throws HttpInternalServerErrorException
      */
     public function handleAuthenticationRequest(AuthenticationRequest $request): AuthenticationTaskResult {
 
@@ -313,7 +316,11 @@ class SecurityManager
      */
     public function getAuthMode($username) {
         $auth_selector = $this->auth_selector;
-        return call_user_func($auth_selector, $this->getAuthModes(), $username);
+        $mode = call_user_func($auth_selector, $this->getAuthModes(), $username);
+        $mode_class = $mode["class_name"];
+        $mode_params = $mode["parameters"];
+        return new $mode_class($mode_params);
+
     }
 
     /**
