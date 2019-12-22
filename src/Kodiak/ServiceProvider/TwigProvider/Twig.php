@@ -44,10 +44,6 @@ class Twig
         //Load configuration
         $this->configuration = $configuration;
         $this->contentProviders = new Container();
-        if(isset($this->configuration[self::CONTENT_PROVIDERS])) {
-            $this->registerContentProviders($this->configuration[self::CONTENT_PROVIDERS]);
-            unset($this->configuration[self::CONTENT_PROVIDERS]);
-        }
 
         // Twig initialization
         $loader = new \Twig_Loader_Filesystem($configuration[self::TWIG_PATH]);
@@ -75,10 +71,11 @@ class Twig
     /**
      * @param $contentProviders
      */
-    public function registerContentProviders($contentProviders): void {
+    public function registerContentProviders($contentProviders, $active_frame): void {
         foreach ($contentProviders as $contentProvider) {
             $className = $contentProvider["class_name"];
             $parameters = $contentProvider["parameters"];
+            $parameters["active_frame"] = $active_frame;
             /** @var ContentProvider $provider */
             $provider = new $className($parameters);
             $this->contentProviders[$provider->getKey()] = function($c) use($provider) {
@@ -129,18 +126,19 @@ class Twig
                     $desiredFrame = "default";
                 }
 
-                if(array_key_exists($desiredFrame,$templates)) {
+                if(array_key_exists($desiredFrame, $templates)) {
                     $pageFrameName = $templates[$desiredFrame];
-                    /** @var ContentProvider $contentProvider */
-                    foreach ($this->contentProviders as $contentProvider) {
-                        $contentProvider->setValue("active_frame",$desiredFrame);
-                    }
                 }
                 else {
                     throw new HttpInternalServerErrorException("Undefined page_template path in twig. Check the configuration!");
                 }
             } else {
                 $pageFrameName = $this->configuration[self::PAGE_TEMPLATE_PATH];
+            }
+
+            if(isset($this->configuration[self::CONTENT_PROVIDERS])) {
+                $this->registerContentProviders($this->configuration[self::CONTENT_PROVIDERS], $desiredFrame);
+                unset($this->configuration[self::CONTENT_PROVIDERS]);
             }
 
             $parameters["app"]["content_template_name"] = $templateName;
