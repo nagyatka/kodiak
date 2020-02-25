@@ -143,4 +143,11 @@ abstract class AuthenticationInterface
         if ($hash->output == $userCandidate->getHashedPassword()) return true;
         else return false;
     }
+
+    protected function checkPbkdf2ByPassword(string $hashed_password, string $passwordCandidate) {
+        $salt = substr($hashed_password, 0, self::HASH_SALT_LENGTH*2);
+        $hash = $this->hashPassword($passwordCandidate, $salt);
+        if ($hash->output == $hashed_password) return true;
+        else return false;
+    }
 }

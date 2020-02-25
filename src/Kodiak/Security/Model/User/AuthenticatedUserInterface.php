@@ -51,12 +51,6 @@ interface AuthenticatedUserInterface extends AuthorizedUserInterface
     public function hasRole($role): bool;
 
     /**
-     * Returns with the 2FA secret
-     * @return mixed
-     */
-    public function get2FASecret();
-
-    /**
      * @param int $user_id
      * @return AuthenticatedUserInterface
      */
