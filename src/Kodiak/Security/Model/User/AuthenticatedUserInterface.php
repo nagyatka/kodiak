@@ -35,6 +35,13 @@ interface AuthenticatedUserInterface extends AuthorizedUserInterface
     public function isValidUsername(): bool;
 
     /**
+     * Is the user has active status or not?
+     *
+     * @return bool
+     */
+    public function isActive(): bool;
+
+    /**
      * @return int
      */
     public function getUserId(): ?int;
@@ -49,6 +56,13 @@ interface AuthenticatedUserInterface extends AuthorizedUserInterface
      * @return bool
      */
     public function hasRole($role): bool;
+
+    /**
+     * The authentication mode which has to be used for the authentication of the user instance.
+     *
+     * @return string|null
+     */
+    public function getAuthModeName(): ?string;
 
     /**
      * @param int $user_id

@@ -27,13 +27,6 @@ abstract class AuthenticationMode
     public abstract static function name();
 
     /**
-     * Használandó user osztály neve namespace-szel ellátva.
-     *
-     * @return string
-     */
-    public abstract function userClass();
-
-    /**
      * Az authentikációt leíró osztály neve namespace-szel ellátva.
      *
      * @return AuthenticationInterface

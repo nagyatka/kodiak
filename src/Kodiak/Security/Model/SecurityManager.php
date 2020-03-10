@@ -42,6 +42,11 @@ class SecurityManager
     private $auth_selector;
 
     /**
+     * @var string
+     */
+    private $user_class;
+
+    /**
      * SecurityManager constructor.
      * @param $configuration
      */
@@ -57,6 +62,7 @@ class SecurityManager
             $this->authentication_modes[$mode::name()] = $mode;
         }
         $this->auth_selector = AuthSelectors::get($configuration["auth_selector"]);
+        $this->user_class = $configuration["user_class"];
     }
 
     /**
@@ -90,7 +96,7 @@ class SecurityManager
         }
         else {
             /** @var AuthenticatedUserInterface $userClassName */
-            $userClassName = $this->getUserClass($securitySession[self::SESS_USERNAME]);
+            $userClassName = $this->getUserClass();
             return $userClassName::getUserFromSecuritySession(
                 $securitySession[self::SESS_USER_ID],
                 $securitySession[self::SESS_USERNAME],
@@ -311,22 +317,24 @@ class SecurityManager
     }
 
     /**
-     * @param $username
+     * Visszaadja a paraméterben kapott felhasználóhoz érvényes
+     * @param $username_or_email
+     * @param bool $is_email
      * @return AuthenticationMode
      */
-    public function getAuthMode($username) {
+    public function getAuthMode($username_or_email, $is_email=false) {
         $auth_selector = $this->auth_selector;
-        $mode = call_user_func($auth_selector, $this->getAuthModes(), $username);
+        $mode = call_user_func($auth_selector, $this->getAuthModes(), $username_or_email, $is_email, $this->getUserClass());
         return $this->authentication_modes[$mode];
     }
 
     /**
-     * Visszaadja az aktuálisan érvényes authentikációs módot a felhasználói adatokat is figyelembe véve
-     * @param string $username
+     * Visszaadja a User osztályt
+     *
      * @return mixed
      */
-    public function getUserClass($username) {
-        return $this->getAuthMode($username)->userClass();
+    public function getUserClass() {
+        return $this->user_class;
     }
 
     /**
