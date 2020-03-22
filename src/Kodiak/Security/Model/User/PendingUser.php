@@ -144,4 +144,14 @@ class PendingUser implements AuthenticatedUserInterface
     {
         return null;
     }
+
+    public function isActive(): bool
+    {
+        return false;
+    }
+
+    public function getAuthModeName(): ?string
+    {
+        return null;
+    }
 }

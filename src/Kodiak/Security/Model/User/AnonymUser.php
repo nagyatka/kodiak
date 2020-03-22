@@ -75,11 +75,13 @@ class AnonymUser implements AuthenticatedUserInterface
         return $this->getRoles();
     }
 
-    /**
-     * Returns with the 2FA secret
-     * @return mixed
-     */
-    public function get2FASecret()
+
+    public function isActive(): bool
+    {
+        return true;
+    }
+
+    public function getAuthModeName(): ?string
     {
         return null;
     }
