@@ -113,7 +113,7 @@ class Application implements \ArrayAccess
             $response = $module->run();
 
         }
-        catch (\Exception $exception) {
+        catch (\Throwable $exception) {
             $errorHandler = $kodiConf->getErrorResponseHandler();
             if ($exception instanceof HttpAuthRequiredException) {
                 $response = $errorHandler->error_401($request, $exception);
