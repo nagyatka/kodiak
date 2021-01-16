@@ -24,7 +24,7 @@
         "psr/log": "1.0.2",
         "nagyatka/pandabase": "v0.21.*",
         "symfony/http-foundation": "v4.4.*",
-        "twig/twig": "v2.4.*",
+        "twig/twig": "v3.2.*",
         "phpgangsta/googleauthenticator": "dev-master",
         "ext-openssl": "*"
     },
