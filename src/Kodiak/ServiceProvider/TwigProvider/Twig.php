@@ -46,8 +46,8 @@ class Twig
         $this->contentProviders = new Container();
 
         // Twig initialization
-        $loader = new \Twig_Loader_Filesystem($configuration[self::TWIG_PATH]);
-        $this->twig = new \Twig_Environment($loader,[
+        $loader = new \Twig\Loader\FilesystemLoader($configuration[self::TWIG_PATH]);
+        $this->twig = new \Twig\Environment($loader,[
             "debug" => Application::getEnvMode() == KodiConf::ENV_DEVELOPMENT
         ]);
 
@@ -56,13 +56,13 @@ class Twig
 
         // Escape
         try {
-            $escaper = new \Twig_Extension_Escaper('html');
+            $escaper = new \Twig\Extension\EscaperExtension('html');
             $this->twig->addExtension($escaper);
         }
         catch (\LogicException $exception) {}
 
         if(Application::getEnvMode() == KodiConf::ENV_DEVELOPMENT)
-            $this->twig->addExtension(new Twig_Extension_Debug());
+            $this->twig->addExtension(new \Twig\Extension\DebugExtension());
 
         // Saját függvények definiálása
         $this->initializeBaseTwigFunction();
@@ -151,7 +151,7 @@ class Twig
      */
     private function initializeBaseTwigFunction(): void {
         // Development or not
-        $is_dev = new \Twig_SimpleFunction('is_dev', function(){
+        $is_dev = new \Twig\TwigFunction('is_dev', function(){
             return Application::getEnvMode() == KodiConf::ENV_DEVELOPMENT;
         });
         $this->twig->addFunction($is_dev);
@@ -166,7 +166,7 @@ class Twig
      *
      * @return \Twig_Environment
      */
-    public function getTwigEnvironment(): \Twig_Environment {
+    public function getTwigEnvironment(): \Twig\Environment {
         return $this->twig;
     }
 

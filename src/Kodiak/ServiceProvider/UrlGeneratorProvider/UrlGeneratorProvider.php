@@ -34,7 +34,7 @@ class UrlGeneratorProvider implements ServiceProviderInterface
             $mytwig = $twig;
             /** @var UrlGenerator $urlGenerator */
             $urlGenerator = $c["url_generator"];
-            $url_generator = new \Twig_SimpleFunction("url_generate",function($url_name,$parameters = []) use($urlGenerator) {
+            $url_generator = new \Twig\TwigFunction("url_generate",function($url_name,$parameters = []) use($urlGenerator) {
                 return $urlGenerator->generate($url_name,$parameters);
             });
             $mytwig->getTwigEnvironment()->addFunction($url_generator);

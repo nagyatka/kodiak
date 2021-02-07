@@ -34,7 +34,7 @@ class SecurityProvider implements ServiceProviderInterface
             $mytwig = $twig;
             /** @var SecurityManager $securityManager */
             $securityManager = $c["security"];
-            $get_user = new \Twig_SimpleFunction("get_user",function() use($securityManager) {
+            $get_user = new \Twig\TwigFunction("get_user",function() use($securityManager) {
                 return $securityManager->getUser();
             });
             $mytwig->getTwigEnvironment()->addFunction($get_user);
