@@ -21,7 +21,7 @@ class SessionProvider implements ServiceProviderInterface
             $mytwig = $twig;
             /** @var Session $session */
             $session = $c["session"];
-            $getSessionVar = new \Twig_SimpleFunction("getSessionVar",function($variable) use ($session) {
+            $getSessionVar = new \Twig\TwigFunction("getSessionVar",function($variable) use ($session) {
                 return $session->get($variable);
             });
             $mytwig->getTwigEnvironment()->addFunction($getSessionVar);
