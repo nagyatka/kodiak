@@ -21,7 +21,7 @@
         "php": "^7.0",
         "pimple/pimple": "^3.0",
         "nikic/fast-route": "v1.2.0",
-        "psr/log": "1.0.2",
+        "psr/log": "1.1.4",
         "nagyatka/pandabase": "v0.21.*",
         "symfony/http-foundation": "v4.4.*",
         "twig/twig": "v3.2.*",
