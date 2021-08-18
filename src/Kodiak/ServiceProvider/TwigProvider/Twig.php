@@ -7,7 +7,10 @@ use Kodiak\Core\KodiConf;
 use Kodiak\Exception\Http\HttpInternalServerErrorException;
 use Kodiak\ServiceProvider\TwigProvider\ContentProvider\ContentProvider;
 use Pimple\Container;
-use Twig_Extension_Debug;
+use Twig\Environment;
+use Twig\Extension\DebugExtension;
+use Twig\Extension\EscaperExtension;
+use Twig\Loader\FilesystemLoader;
 
 /**
  * Class Twig
@@ -50,8 +53,8 @@ class Twig
         }
 
         // Twig initialization
-        $loader = new \Twig_Loader_Filesystem($configuration[self::TWIG_PATH]);
-        $this->twig = new \Twig_Environment($loader,[
+        $loader = new FilesystemLoader($configuration[self::TWIG_PATH]);
+        $this->twig = new Environment($loader,[
             "debug" => Application::getEnvMode() == KodiConf::ENV_DEVELOPMENT
         ]);
 
@@ -60,13 +63,13 @@ class Twig
 
         // Escape
         try {
-            $escaper = new \Twig_Extension_Escaper('html');
+            $escaper = new EscaperExtension('html');
             $this->twig->addExtension($escaper);
         }
         catch (\LogicException $exception) {}
 
         if(Application::getEnvMode() == KodiConf::ENV_DEVELOPMENT)
-            $this->twig->addExtension(new Twig_Extension_Debug());
+            $this->twig->addExtension(new DebugExtension());
 
         // Saját függvények definiálása
         $this->initializeBaseTwigFunction();
@@ -148,7 +151,7 @@ class Twig
      */
     private function initializeBaseTwigFunction(): void {
         // Development or not
-        $is_dev = new \Twig_SimpleFunction('is_dev', function(){
+        $is_dev = new \Twig\TwigFunction('is_dev', function(){
             return Application::getEnvMode() == KodiConf::ENV_DEVELOPMENT;
         });
         $this->twig->addFunction($is_dev);
@@ -161,9 +164,8 @@ class Twig
     /**
      * Returns with the original Twig_Environment.
      *
-     * @return \Twig_Environment
      */
-    public function getTwigEnvironment(): \Twig_Environment {
+    public function getTwigEnvironment(): \Twig\Environment {
         return $this->twig;
     }
 

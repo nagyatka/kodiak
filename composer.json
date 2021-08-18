@@ -18,13 +18,13 @@
         }
     },
     "require": {
-        "php": "^7.0",
+        "php": "^7.1",
         "pimple/pimple": "^3.0",
         "nikic/fast-route": "v1.2.0",
         "psr/log": "1.1.4",
         "nagyatka/pandabase": "v0.20.*",
         "symfony/http-foundation": "v3.3.*",
-        "twig/twig": "v2.4.*",
+        "twig/twig": "v3.2.1",
         "phpgangsta/googleauthenticator": "dev-master",
         "ext-openssl": "*"
     },
