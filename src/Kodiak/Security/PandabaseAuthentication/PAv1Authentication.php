@@ -39,13 +39,13 @@ class PAv1Authentication extends AuthenticationInterface
 
         // If the username doesnt exist, we stop the auth process with error.
         if(!$userCandidate->isValidUsername()) {
-            return new AuthenticationTaskResult(false, null);
+            return new AuthenticationTaskResult(false, 'AUTHENTICATION_ERROR');
         }
 
         // Check password
         if(!$this->checkPbkdf2($userCandidate,$passwordCandidate)) {
             $userCandidate->incrementFaildPasswordCount();
-            return new AuthenticationTaskResult(false, 'PASSWORD_ERROR');
+            return new AuthenticationTaskResult(false, 'AUTHENTICATION_ERROR');
         }
 
         // Check lockout
