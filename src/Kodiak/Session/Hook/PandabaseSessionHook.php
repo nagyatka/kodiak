@@ -23,6 +23,7 @@ class PandabaseSessionHook extends HookInterface
             "options" => $options
         ]);
         session_set_save_handler($sessionHandler);
+        session_set_cookie_params(0, '/', null, true, true);
         session_start();
 
         return $request;
