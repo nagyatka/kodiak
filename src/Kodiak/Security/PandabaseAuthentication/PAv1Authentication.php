@@ -135,10 +135,18 @@ class PAv1Authentication extends AuthenticationInterface
             return new AuthenticationTaskResult(false, "MISMATCHED_TOKENS");
         }
 
-        // Jelszó policy
-        // 1. Jelszó history (utolsó 6 jelszó)
-        // 2. Jelszó erősség
-        
+        // Új jelszók egyformák
+        if($credentials["password"] !== $credentials["repassword"]) {
+            return new AuthenticationTaskResult(false, "MISMATCHED_PASSWORDS");
+        }
+
+        if (!$this->checkPasswordComplexity($credentials["password"])) {
+            return new AuthenticationTaskResult(false, 'PASSWORD_COMPLEXITY_FAIL');
+        }
+
+        if (!$user->checkPasswordHistory($credentials["password"])) {
+            return new AuthenticationTaskResult(false, 'PASSWORD_IN_HISTORY');
+        }
 
         $user["password"] = $this->hashPassword($credentials["password"])->output;
         $user["reset_token"] = null;
