@@ -43,7 +43,7 @@ class ModuleParams
      * @param string $key
      * @return mixed|null
      */
-    public static function get(string $key): ?mixed {
+    public static function get(string $key): mixed {
         return self::getInstance()->params[$key];
     }
 
