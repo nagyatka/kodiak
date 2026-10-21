@@ -76,11 +76,7 @@ class StreamResponse extends Response
                 // Both numbers present, return specific range
                 $start = intval($range[0]);
                 $end = intval($range[1]);
-                // if ($end >= $filesize || (!$start && (!$end || $end == ($filesize - 1)))) {
-                //     $partial = false;
-                //     var_dump("ITT");
-                //     die();
-                // }
+                if ($end >= $filesize) $end = $filesize - 1;
             }
             $length = $end - $start + 1;
         }
