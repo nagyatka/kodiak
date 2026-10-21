@@ -68,11 +68,19 @@ class StreamResponse extends Response
             } else if ($range[1] === '') {
                 $start = intval($range[0]);
                 $end = $filesize - 1;
+                if ($end-$start > 20*1024*1024) {
+                    $end = $start + 20*1024*1024;
+                    if ($end>=$filesize) $end = $filesize-1;
+                }
             }else{
                 // Both numbers present, return specific range
                 $start = intval($range[0]);
                 $end = intval($range[1]);
-                if ($end >= $filesize || (!$start && (!$end || $end == ($filesize - 1)))) $partial = false;
+                // if ($end >= $filesize || (!$start && (!$end || $end == ($filesize - 1)))) {
+                //     $partial = false;
+                //     var_dump("ITT");
+                //     die();
+                // }
             }
             $length = $end - $start + 1;
         }
